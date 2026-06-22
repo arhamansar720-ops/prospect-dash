@@ -67,13 +67,20 @@ const MOCK_LEADS: BusinessLead[] = [
 export async function searchBusinessLeads(
   params: BusinessSearchParams
 ): Promise<BusinessLead[]> {
-  // Mock latency so the UI loading state can be felt/tested.
-  await new Promise((r) => setTimeout(r, 600));
-
   if (!params.name && !params.company && !params.title && !params.location) {
     return [];
   }
 
-  // TODO: replace with `const res = await fetch('/api/business-search', {...})`
-  return MOCK_LEADS;
+  const res = await fetch('/api/business-search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    console.error('business-search error', await res.text());
+    return MOCK_LEADS;
+  }
+
+  return res.json();
 }

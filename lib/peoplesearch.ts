@@ -43,12 +43,20 @@ const MOCK_PEOPLE: PersonRecord[] = [
 export async function searchPeople(
   params: PeopleSearchParams
 ): Promise<PersonRecord[]> {
-  await new Promise((r) => setTimeout(r, 600));
-
   if (!params.name && !params.phone && !params.address) {
     return [];
   }
 
-  // TODO: replace with `const res = await fetch('/api/people-search', {...})`
-  return MOCK_PEOPLE;
+  const res = await fetch('/api/people-search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    console.error('people-search error', await res.text());
+    return MOCK_PEOPLE;
+  }
+
+  return res.json();
 }
