@@ -1,49 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { errorResponse, searchPeople, toLeadSummary } from '@/lib/apolloServer';
+
+const PER_PAGE = 25;
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.APOLLO_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'APOLLO_API_KEY not configured' }, { status: 500 });
+  try {
+    const params = await req.json();
+    const page = Math.max(1, Number(params.page) || 1);
+    const company = (params.company ?? '').trim();
+    // People API Search has no free-text company-name filter; a bare domain
+    // (e.g. "acme.com") is matched exactly, anything else goes to keywords.
+    const isDomain = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(company);
+
+    const data = await searchPeople({
+      q_person_name: params.name?.trim(),
+      person_titles: params.title?.trim() ? [params.title.trim()] : undefined,
+      person_locations: params.location?.trim() ? [params.location.trim()] : undefined,
+      q_organization_domains_list: isDomain ? [company] : undefined,
+      q_keywords: company && !isDomain ? company : undefined,
+      page,
+      per_page: PER_PAGE,
+    });
+
+    return Response.json({
+      results: (data.people ?? []).map(toLeadSummary),
+      total: data.total_entries ?? 0,
+      page,
+      perPage: PER_PAGE,
+    });
+  } catch (e) {
+    return errorResponse(e);
   }
-
-  const params = await req.json();
-
-  const body: Record<string, unknown> = {
-    page: 1,
-    per_page: 10,
-  };
-  if (params.name) body.q_person_name = params.name;
-  if (params.company) body.organization_name = params.company;
-  if (params.title) body.person_titles = [params.title];
-  if (params.location) body.person_locations = [params.location];
-
-  const res = await fetch('https://api.apollo.io/v1/mixed_people/search', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    return NextResponse.json({ error: err }, { status: res.status });
-  }
-
-  const data = await res.json();
-  const people = (data.people ?? []) as Record<string, unknown>[];
-
-  const leads = people.map((p, i) => ({
-    id: (p.id as string) ?? `r${i}`,
-    name: (p.name as string) ?? 'Unknown',
-    title: (p.title as string) ?? '',
-    company: ((p.organization as Record<string, unknown>)?.name as string) ?? '',
-    email: (p.email as string | null) ?? null,
-    phone: ((p.phone_numbers as { raw_number: string }[])?.[0]?.raw_number) ?? null,
-    location: [p.city, p.state].filter(Boolean).join(', ') || '',
-    matchConfidence: i === 0 ? 'high' : i < 3 ? 'medium' : 'low',
-  }));
-
-  return NextResponse.json(leads);
 }

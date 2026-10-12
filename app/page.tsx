@@ -1,22 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BusinessSearchPanel from '@/components/BusinessSearchPanel';
 import PeopleSearchPanel from '@/components/PeopleSearchPanel';
 
+type Status = { connected: boolean; reason?: string | null } | null;
+
 export default function Page() {
   const [tab, setTab] = useState<'business' | 'people'>('business');
+  const [status, setStatus] = useState<Status>(null);
+
+  useEffect(() => {
+    fetch('/api/status')
+      .then((r) => r.json())
+      .then(setStatus)
+      .catch(() => setStatus({ connected: false, reason: 'status check failed' }));
+  }, []);
 
   return (
     <div className="shell">
       <div className="topbar">
         <div className="logo-box">PD</div>
         <span className="brand">Prospect Dash</span>
-        <span className="brand-sub">v0.1 — local build</span>
+        <span className="brand-sub">v0.2</span>
         <div className="topbar-right">
           <span className="status-pill">
-            <span className="dot offline" />
-            no data source connected
+            <span className={`dot ${status === null ? 'pending' : status.connected ? '' : 'offline'}`} />
+            {status === null
+              ? 'checking apollo…'
+              : status.connected
+                ? 'apollo connected'
+                : status.reason || 'apollo not connected'}
           </span>
         </div>
       </div>
@@ -42,7 +56,7 @@ export default function Page() {
 
       <footer className="app-footer">
         <span>prospect-dash · personal use</span>
-        <span>mock data — wire lib/apollo.ts and lib/peoplesearch.ts to go live</span>
+        <span>live data via Apollo People API Search</span>
       </footer>
     </div>
   );

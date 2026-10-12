@@ -1,48 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { errorResponse, searchPeople, toLeadSummary } from '@/lib/apolloServer';
+
+const PER_PAGE = 25;
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.APOLLO_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'APOLLO_API_KEY not configured' }, { status: 500 });
+  try {
+    const params = await req.json();
+    const page = Math.max(1, Number(params.page) || 1);
+
+    const data = await searchPeople({
+      q_person_name: params.name?.trim(),
+      q_keywords: params.keywords?.trim(),
+      person_locations: params.city?.trim() ? [params.city.trim()] : undefined,
+      page,
+      per_page: PER_PAGE,
+    });
+
+    return Response.json({
+      results: (data.people ?? []).map(toLeadSummary),
+      total: data.total_entries ?? 0,
+      page,
+      perPage: PER_PAGE,
+    });
+  } catch (e) {
+    return errorResponse(e);
   }
-
-  const params = await req.json();
-
-  const body: Record<string, unknown> = {
-    page: 1,
-    per_page: 10,
-  };
-  if (params.name) body.q_person_name = params.name;
-  if (params.city) body.person_locations = [params.city];
-
-  const res = await fetch('https://api.apollo.io/v1/mixed_people/search', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    return NextResponse.json({ error: err }, { status: res.status });
-  }
-
-  const data = await res.json();
-  const people = (data.people ?? []) as Record<string, unknown>[];
-
-  const records = people.map((p, i) => ({
-    id: (p.id as string) ?? `r${i}`,
-    name: (p.name as string) ?? 'Unknown',
-    age: null,
-    phones: ((p.phone_numbers as { raw_number: string }[]) ?? []).map((ph) => ph.raw_number),
-    addresses: [
-      [p.city, p.state].filter(Boolean).join(', '),
-    ].filter(Boolean),
-    relatedTo: [],
-    matchConfidence: i === 0 ? 'high' : i < 3 ? 'medium' : 'low',
-  }));
-
-  return NextResponse.json(records);
 }

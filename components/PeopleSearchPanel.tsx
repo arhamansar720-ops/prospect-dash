@@ -1,29 +1,36 @@
 'use client';
 
 import { useState } from 'react';
-import { PersonRecord, PeopleSearchParams } from '@/lib/types';
-import { searchPeople } from '@/lib/peoplesearch';
+import { BusinessLead, PeopleSearchParams, SearchResult } from '@/lib/types';
+import { searchPeople } from '@/lib/apollo';
+import LeadResults from './LeadResults';
 
 export default function PeopleSearchPanel() {
   const [params, setParams] = useState<PeopleSearchParams>({});
-  const [results, setResults] = useState<PersonRecord[] | null>(null);
+  const [data, setData] = useState<SearchResult<BusinessLead> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+
+  const hasInput = Object.values(params).some((v) => v?.trim());
 
   function update(field: keyof PeopleSearchParams, value: string) {
     setParams((p) => ({ ...p, [field]: value }));
   }
 
-  async function runSearch() {
+  async function runSearch(page = 1) {
+    if (!hasInput) {
+      setError('Fill at least one field.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setSearched(true);
     try {
-      const res = await searchPeople(params);
-      setResults(res);
+      setData(await searchPeople(params, page));
     } catch (e) {
-      setError('Search failed. Check that your data source is connected in lib/peoplesearch.ts.');
+      setData(null);
+      setError(e instanceof Error ? e.message : 'Search failed.');
     } finally {
       setLoading(false);
     }
@@ -31,7 +38,7 @@ export default function PeopleSearchPanel() {
 
   function clear() {
     setParams({});
-    setResults(null);
+    setData(null);
     setSearched(false);
     setError(null);
   }
@@ -41,9 +48,15 @@ export default function PeopleSearchPanel() {
       <div className="panel">
         <div className="panel-header">
           <span className="panel-title">People Search</span>
-          <span className="panel-eyebrow">source: not yet connected</span>
+          <span className="panel-eyebrow">source: apollo.io (professional profiles)</span>
         </div>
-        <div className="panel-body">
+        <form
+          className="panel-body"
+          onSubmit={(e) => {
+            e.preventDefault();
+            runSearch(1);
+          }}
+        >
           <div className="field-grid">
             <div className="field">
               <label htmlFor="p-name">Full name</label>
@@ -55,21 +68,12 @@ export default function PeopleSearchPanel() {
               />
             </div>
             <div className="field">
-              <label htmlFor="p-phone">Phone</label>
+              <label htmlFor="p-keywords">Keywords</label>
               <input
-                id="p-phone"
-                placeholder="e.g. (832) 555-0118"
-                value={params.phone || ''}
-                onChange={(e) => update('phone', e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="p-address">Address</label>
-              <input
-                id="p-address"
-                placeholder="e.g. 4821 Birchcrest Ln"
-                value={params.address || ''}
-                onChange={(e) => update('address', e.target.value)}
+                id="p-keywords"
+                placeholder="e.g. roofing, realtor, CPA"
+                value={params.keywords || ''}
+                onChange={(e) => update('keywords', e.target.value)}
               />
             </div>
             <div className="field">
@@ -83,72 +87,26 @@ export default function PeopleSearchPanel() {
             </div>
           </div>
           <div className="actions-row">
-            <button className="btn btn-primary" onClick={runSearch} disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Searching…' : 'Search'}
             </button>
-            <button className="btn btn-ghost" onClick={clear}>
+            <button type="button" className="btn btn-ghost" onClick={clear}>
               Clear
             </button>
-            <span className="hint">Fill at least one field</span>
+            <span className="hint">Phone / home-address lookup isn&apos;t supported by Apollo</span>
           </div>
-        </div>
+        </form>
       </div>
 
       {error && <div className="error-box">{error}</div>}
 
-      <div className="panel">
-        <div className="panel-header">
-          <span className="panel-title">Results</span>
-          <span className="panel-eyebrow">
-            {results ? `${results.length} match${results.length === 1 ? '' : 'es'}` : ''}
-          </span>
-        </div>
-        {loading && <div className="loading-row">Querying public records…</div>}
-        {!loading && !searched && (
-          <div className="empty-state">
-            <div className="empty-state-title">No search yet</div>
-            <div className="empty-state-sub">
-              Enter a name, phone, or address above and run a search.
-            </div>
-          </div>
-        )}
-        {!loading && searched && results && results.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-state-title">No matches</div>
-            <div className="empty-state-sub">Try broadening your search terms.</div>
-          </div>
-        )}
-        {!loading && results && results.length > 0 && (
-          <table className="results-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Phones</th>
-                <th>Addresses</th>
-                <th>Related to</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.name}</td>
-                  <td>{r.age ?? '—'}</td>
-                  <td>{r.phones.length ? r.phones.join(', ') : '—'}</td>
-                  <td>{r.addresses.length ? r.addresses.join(' / ') : '—'}</td>
-                  <td>{r.relatedTo.length ? r.relatedTo.join(', ') : '—'}</td>
-                  <td>
-                    <span className={`tag match-${r.matchConfidence === 'medium' ? 'mid' : r.matchConfidence}`}>
-                      {r.matchConfidence}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <LeadResults
+        data={data}
+        loading={loading}
+        searched={searched}
+        emptyHint="Enter a name, keywords, or city above and run a search."
+        onPage={runSearch}
+      />
     </>
   );
 }

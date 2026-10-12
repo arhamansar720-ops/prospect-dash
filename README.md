@@ -5,31 +5,31 @@ Personal prospecting dashboard — two modes in one UI:
 - **Business Leads** — name / company / title / location search (built for Apollo.io)
 - **People Search** — name / phone / address search (bring your own provider)
 
-Currently runs on mock data so you can see the UI/UX before wiring anything live.
+Both tabs run on live Apollo.io data through server-side API routes
+(the key never reaches the browser).
 
-## Design
+## How the data works
 
-Token system: navy `#16273D` + Roblox-blue `#2E6FBA` primary, single signal-orange
-`#FF7A29` for the one action that matters (Search), hard 2px borders instead of
-shadows, `Barlow Condensed` for headers/nav, `Inter` for body, `JetBrains Mono`
-for all data (phone numbers, addresses, results tables) so things line up.
+| Route | Apollo endpoint | Cost |
+| --- | --- | --- |
+| `POST /api/business-search` | `mixed_people/api_search` | 0 credits |
+| `POST /api/people-search` | `mixed_people/api_search` | 0 credits |
+| `POST /api/enrich` (the **Reveal** button) | `people/match` | ~1 credit when an email is found |
+| `GET /api/status` | `auth/health` | 0 credits |
 
-## Wiring up real data
+Search results come back with obfuscated last names and only *whether* an
+email/phone exists. Clicking **Reveal** on a row enriches that one person.
 
-### Business Leads → Apollo.io
-1. Create `app/api/business-search/route.ts` — a server route that calls Apollo's
-   People Search endpoint using an `APOLLO_API_KEY` environment variable (never
-   call Apollo from the browser directly — your key would be exposed).
-2. In `lib/apollo.ts`, swap the mock return for a `fetch('/api/business-search', ...)`
-   call to your new route. The wire-up comment at the top of that file has the
-   exact request shape.
+The old `mixed_people/search` endpoint is paid-plan only — on a free Apollo
+account it returns `403 API_INACCESSIBLE`, which is why v0.1 never worked.
+Free-plan access to `api_search` also requires an Apollo account registered
+with a work email.
 
-### People Search → a data-broker provider
-1. Pick a provider (Endato, IDI Data, Whitepages Pro, etc.) and read their terms —
-   most require a business account and have permissible-use restrictions if results
-   could ever be used for credit, employment, or tenant screening decisions.
-2. Same pattern: add `app/api/people-search/route.ts` as a server-side proxy holding
-   the provider key in an env var, then swap the mock in `lib/peoplesearch.ts`.
+Apollo can't search by phone number or home address; that would need a
+separate people-data provider (Endato, IDI, Whitepages Pro, …) with its own
+permissible-use terms.
+
+Set `APOLLO_API_KEY` under Vercel → Project → Settings → Environment Variables.
 
 ## Deploying (GitHub → Vercel, browser only)
 
@@ -37,9 +37,7 @@ for all data (phone numbers, addresses, results tables) so things line up.
    (drag-and-drop is fine — no CLI needed).
 2. In Vercel, "Add New Project" → import that repo. Vercel auto-detects Next.js,
    no config needed.
-3. Once you add the API routes above, add `APOLLO_API_KEY` (and your people-search
-   key) under Vercel → Project → Settings → Environment Variables before deploying
-   live data.
+3. Add `APOLLO_API_KEY` under Vercel → Project → Settings → Environment Variables.
 
 ## Local persistence
 

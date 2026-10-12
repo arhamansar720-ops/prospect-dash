@@ -1,22 +1,31 @@
+/** A search hit. Contact details are hidden until the lead is revealed. */
 export type BusinessLead = {
   id: string;
   name: string;
   title: string;
   company: string;
-  email: string | null;
-  phone: string | null;
-  location: string;
-  matchConfidence: 'high' | 'medium' | 'low';
+  hasEmail: boolean;
+  hasPhone: boolean;
 };
 
-export type PersonRecord = {
+/** Full record from Apollo people enrichment (costs credits). */
+export type RevealedLead = {
   id: string;
   name: string;
-  age: number | null;
-  phones: string[];
-  addresses: string[];
-  relatedTo: string[];
-  matchConfidence: 'high' | 'medium' | 'low';
+  title: string;
+  company: string;
+  email: string | null;
+  emailStatus: string | null;
+  phone: string | null;
+  location: string;
+  linkedinUrl: string | null;
+};
+
+export type SearchResult<T> = {
+  results: T[];
+  total: number;
+  page: number;
+  perPage: number;
 };
 
 export type BusinessSearchParams = {
@@ -28,7 +37,6 @@ export type BusinessSearchParams = {
 
 export type PeopleSearchParams = {
   name?: string;
-  phone?: string;
-  address?: string;
+  keywords?: string;
   city?: string;
 };

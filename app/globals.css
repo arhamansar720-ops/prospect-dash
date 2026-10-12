@@ -419,3 +419,40 @@ footer.app-footer {
   display: flex;
   justify-content: space-between;
 }
+
+/* ---------- Live-data additions ---------- */
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dot.pending {
+  background: #c9a227;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.results-table a {
+  color: var(--primary);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.error-box.inset {
+  margin: 12px 18px 0;
+}
