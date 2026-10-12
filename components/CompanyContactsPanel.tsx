@@ -5,7 +5,7 @@ import { EmailFinderParams, EmailFinderResult, SiteContacts } from '@/lib/types'
 import { findEmail, getSiteContacts } from '@/lib/api';
 import ContactsCard from './ContactsCard';
 
-export default function PeopleSearchPanel({ hunter }: { hunter: boolean | null }) {
+export default function CompanyContactsPanel({ hunter }: { hunter: boolean | null }) {
   const [website, setWebsite] = useState('');
   const [site, setSite] = useState<SiteContacts | null>(null);
   const [siteLoading, setSiteLoading] = useState(false);

@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import BusinessSearchPanel from '@/components/BusinessSearchPanel';
-import PeopleSearchPanel from '@/components/PeopleSearchPanel';
+import PeopleFinderPanel from '@/components/PeopleFinderPanel';
+import CompanyContactsPanel from '@/components/CompanyContactsPanel';
 
 type Status = { osm: boolean; hunter: boolean } | null;
 
 export default function Page() {
-  const [tab, setTab] = useState<'business' | 'people'>('business');
+  const [tab, setTab] = useState<'business' | 'people' | 'company'>('business');
   const [status, setStatus] = useState<Status>(null);
 
   useEffect(() => {
@@ -47,16 +48,24 @@ export default function Page() {
             className={`tab-btn ${tab === 'people' ? 'active' : ''}`}
             onClick={() => setTab('people')}
           >
+            People Finder
+          </button>
+          <button
+            className={`tab-btn ${tab === 'company' ? 'active' : ''}`}
+            onClick={() => setTab('company')}
+          >
             Company Contacts
           </button>
         </div>
 
-        {tab === 'business' ? <BusinessSearchPanel /> : <PeopleSearchPanel hunter={status ? status.hunter : null} />}
+        {tab === 'business' && <BusinessSearchPanel />}
+        {tab === 'people' && <PeopleFinderPanel />}
+        {tab === 'company' && <CompanyContactsPanel hunter={status ? status.hunter : null} />}
       </main>
 
       <footer className="app-footer">
         <span>prospect-dash · personal use</span>
-        <span>data: OpenStreetMap · company websites · Hunter.io (optional)</span>
+        <span>data: OpenStreetMap · NPI Registry · company websites · Hunter.io (optional)</span>
       </footer>
     </div>
   );

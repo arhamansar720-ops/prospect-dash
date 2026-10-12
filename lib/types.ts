@@ -54,3 +54,27 @@ export type EmailFinderResult = {
   position: string | null;
   sources: number;
 };
+
+export type PeopleSearchParams = {
+  firstName?: string;
+  lastName?: string;
+  specialty?: string;
+  location?: string;
+};
+
+/** A healthcare provider from the NPI Registry. */
+export type Provider = {
+  npi: string;
+  name: string;
+  credential: string;
+  kind: 'individual' | 'organization';
+  specialty: string;
+  address: string;
+  phone: string | null;
+  profileUrl: string;
+};
+
+export type PeopleSearchResult = {
+  results: Provider[];
+  total: number;
+};

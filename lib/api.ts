@@ -3,6 +3,8 @@ import {
   BusinessSearchResult,
   EmailFinderParams,
   EmailFinderResult,
+  PeopleSearchParams,
+  PeopleSearchResult,
   SiteContacts,
 } from './types';
 
@@ -25,3 +27,5 @@ export const searchBusinesses = (params: BusinessSearchParams) =>
 export const getSiteContacts = (website: string) => post<SiteContacts>('/api/site-contacts', { website });
 
 export const findEmail = (params: EmailFinderParams) => post<EmailFinderResult>('/api/email-finder', params);
+
+export const searchPeople = (params: PeopleSearchParams) => post<PeopleSearchResult>('/api/people-search', params);

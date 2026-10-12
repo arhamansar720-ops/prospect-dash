@@ -2,10 +2,17 @@
 
 Personal prospecting dashboard that runs entirely on free, keyless public data.
 
+There is no free general-purpose people-search API (name/phone/home-address data
+is sold by data brokers under permissible-use agreements), so the People Finder
+covers the biggest free official directory of people: US healthcare providers.
+
 - **Business Leads**: search local businesses by type and city (OpenStreetMap). Get
   name, address, phone, email and website, then click **Contacts** on any row to
   pull emails, phones and social links straight from that business's own website.
   Export results to CSV.
+- **People Finder**: search any US healthcare provider (doctors, dentists, nurses,
+  therapists, clinics) by name, specialty and city via the free CMS NPI Registry.
+  Returns credential, specialty, practice address, phone and NPI number.
 - **Company Contacts**: paste any company website to scan it for contact details.
   Optional **Email Finder** (first name + last name + domain) via Hunter.io.
 
@@ -14,6 +21,7 @@ Personal prospecting dashboard that runs entirely on free, keyless public data.
 | Source | Key needed | Used for |
 | --- | --- | --- |
 | [Nominatim](https://nominatim.org) + [Overpass](https://overpass-api.de) (OpenStreetMap) | none | business search |
+| [NPI Registry](https://npiregistry.cms.hhs.gov/api-page) (CMS) | none | people finder (healthcare providers) |
 | The business's own website (home, /contact, /about) | none | emails, phones, socials |
 | [Hunter.io](https://hunter.io) | `HUNTER_API_KEY` (optional, free plan = 50 credits/mo) | named employees + email finder |
 
@@ -31,6 +39,7 @@ No auth, CORS enabled. Every endpoint accepts GET (query string) or POST (JSON b
 
 ```
 GET /api/business-search?category=dentist&location=Sugar%20Land,%20TX[&name=...]
+GET /api/people-search?lastName=nguyen&specialty=dentist&location=Sugar%20Land,%20TX
 GET /api/site-contacts?website=flossdentalsugarland.com
 GET /api/email-finder?firstName=Dana&lastName=Whitfield&domain=acme.com   (needs HUNTER_API_KEY)
 GET /api/status

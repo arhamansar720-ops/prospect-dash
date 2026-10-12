@@ -10,6 +10,16 @@ export function GET() {
         example: '/api/business-search?category=dentist&location=Sugar%20Land,%20TX',
         source: 'OpenStreetMap (Nominatim + Overpass)',
       },
+      'GET /api/people-search': {
+        params: {
+          firstName: '',
+          lastName: 'exact, or prefix with trailing * (min 2 letters)',
+          specialty: 'e.g. dentist, chiropractor',
+          location: 'City, ST',
+        },
+        example: '/api/people-search?lastName=nguyen&specialty=dentist&location=Sugar%20Land,%20TX',
+        source: 'CMS NPI Registry (US healthcare providers)',
+      },
       'GET /api/site-contacts': {
         params: { website: 'domain or URL' },
         example: '/api/site-contacts?website=flossdentalsugarland.com',
