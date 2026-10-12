@@ -60,6 +60,7 @@ export type PeopleSearchParams = {
   lastName?: string;
   specialty?: string;
   location?: string;
+  email?: string;
 };
 
 /** A healthcare provider from the NPI Registry. */
@@ -74,7 +75,33 @@ export type Provider = {
   profileUrl: string;
 };
 
+export type PersonSourceId = 'npi' | 'finra' | 'github' | 'orcid' | 'wikidata' | 'gravatar';
+
+/** One person record from any public source, normalized. */
+export type PersonHit = {
+  source: PersonSourceId;
+  id: string;
+  name: string;
+  /** credential, specialty, job title, bio or description */
+  headline: string;
+  organization: string;
+  location: string;
+  phone: string | null;
+  email: string | null;
+  url: string;
+  links: { label: string; url: string }[];
+};
+
+export type SourceStatus = {
+  id: PersonSourceId;
+  label: string;
+  covers: string;
+  status: 'ok' | 'skipped' | 'error';
+  count: number;
+  note?: string;
+};
+
 export type PeopleSearchResult = {
-  results: Provider[];
-  total: number;
+  results: PersonHit[];
+  sources: SourceStatus[];
 };

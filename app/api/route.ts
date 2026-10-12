@@ -13,12 +13,13 @@ export function GET() {
       'GET /api/people-search': {
         params: {
           firstName: '',
-          lastName: 'exact, or prefix with trailing * (min 2 letters)',
-          specialty: 'e.g. dentist, chiropractor',
-          location: 'City, ST',
+          lastName: '',
+          location: 'City, ST (optional)',
+          specialty: 'healthcare specialty (optional)',
+          email: 'optional — checks Gravatar',
         },
-        example: '/api/people-search?lastName=nguyen&specialty=dentist&location=Sugar%20Land,%20TX',
-        source: 'CMS NPI Registry (US healthcare providers)',
+        example: '/api/people-search?firstName=john&lastName=smith&location=Houston,%20TX',
+        sources: 'NPI Registry, FINRA BrokerCheck, GitHub, ORCID, Wikidata, Gravatar',
       },
       'GET /api/site-contacts': {
         params: { website: 'domain or URL' },

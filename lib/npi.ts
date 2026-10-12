@@ -34,7 +34,7 @@ type NpiResult = {
 const title = (s = '') => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 /** "Houston, TX" → { city: "Houston", state: "TX" }; "TX" → { state: "TX" } */
-function parseLocation(location: string) {
+export function parseLocation(location: string) {
   const parts = location.split(',').map((p) => p.trim()).filter(Boolean);
   const last = parts[parts.length - 1] ?? '';
   if (/^[a-z]{2}$/i.test(last)) {

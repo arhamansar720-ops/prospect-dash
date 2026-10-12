@@ -554,3 +554,57 @@ footer.app-footer {
 .results-table td.nowrap {
   white-space: nowrap;
 }
+
+.source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.source-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.source-chip.skipped {
+  color: var(--text-muted);
+  border-style: dashed;
+  cursor: default;
+}
+
+.source-chip.error {
+  border-color: var(--danger);
+  color: var(--danger);
+  cursor: default;
+}
+
+.source-chip.off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.sublink {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted) !important;
+}
+
+.results-table td.clip {
+  max-width: 260px;
+}
+
+.tag.src-npi { border-color: #2f9e58; color: #2f9e58; }
+.tag.src-finra { border-color: #2e6fba; color: #2e6fba; }
+.tag.src-github { border-color: #16273d; color: #16273d; }
+.tag.src-orcid { border-color: #7a9c1f; color: #5d7a12; }
+.tag.src-wikidata { border-color: #9a3d8f; color: #9a3d8f; }
+.tag.src-gravatar { border-color: #d8631d; color: #d8631d; }
