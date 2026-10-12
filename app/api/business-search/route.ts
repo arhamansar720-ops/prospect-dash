@@ -1,34 +1,31 @@
 import { NextRequest } from 'next/server';
-import { errorResponse, searchPeople, toLeadSummary } from '@/lib/apolloServer';
+import { ApiError, errorResponse } from '@/lib/http';
+import { geocode, searchBusinesses } from '@/lib/osm';
 
-const PER_PAGE = 25;
+export const maxDuration = 60;
 
-export async function POST(req: NextRequest) {
+async function handle(input: Record<string, unknown>) {
   try {
-    const params = await req.json();
-    const page = Math.max(1, Number(params.page) || 1);
-    const company = (params.company ?? '').trim();
-    // People API Search has no free-text company-name filter; a bare domain
-    // (e.g. "acme.com") is matched exactly, anything else goes to keywords.
-    const isDomain = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(company);
+    const category = String(input.category ?? '').trim().slice(0, 60);
+    const name = String(input.name ?? '').trim().slice(0, 60);
+    const location = String(input.location ?? '').trim().slice(0, 120);
 
-    const data = await searchPeople({
-      q_person_name: params.name?.trim(),
-      person_titles: params.title?.trim() ? [params.title.trim()] : undefined,
-      person_locations: params.location?.trim() ? [params.location.trim()] : undefined,
-      q_organization_domains_list: isDomain ? [company] : undefined,
-      q_keywords: company && !isDomain ? company : undefined,
-      page,
-      per_page: PER_PAGE,
-    });
+    if (!location) throw new ApiError('Enter a city or area to search in.', 400);
+    if (!category && !name) throw new ApiError('Enter a business type or a business name.', 400);
 
-    return Response.json({
-      results: (data.people ?? []).map(toLeadSummary),
-      total: data.total_entries ?? 0,
-      page,
-      perPage: PER_PAGE,
-    });
+    const bbox = await geocode(location);
+    const { results, truncated, partial } = await searchBusinesses(bbox, category, name);
+    return Response.json({ results, location: bbox.label, truncated, partial });
   } catch (e) {
     return errorResponse(e);
   }
+}
+
+// GET /api/business-search?category=dentist&location=Houston,TX[&name=...]
+export async function GET(req: NextRequest) {
+  return handle(Object.fromEntries(req.nextUrl.searchParams));
+}
+
+export async function POST(req: NextRequest) {
+  return handle(await req.json().catch(() => ({})));
 }

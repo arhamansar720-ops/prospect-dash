@@ -1,46 +1,50 @@
 # Prospect Dash
 
-Personal prospecting dashboard — two modes in one UI:
+Personal prospecting dashboard that runs entirely on free, keyless public data.
 
-- **Business Leads** — name / company / title / location search (built for Apollo.io)
-- **People Search** — name / phone / address search (bring your own provider)
+- **Business Leads**: search local businesses by type and city (OpenStreetMap). Get
+  name, address, phone, email and website, then click **Contacts** on any row to
+  pull emails, phones and social links straight from that business's own website.
+  Export results to CSV.
+- **Company Contacts**: paste any company website to scan it for contact details.
+  Optional **Email Finder** (first name + last name + domain) via Hunter.io.
 
-Both tabs run on live Apollo.io data through server-side API routes
-(the key never reaches the browser).
+## Data sources
 
-## How the data works
-
-| Route | Apollo endpoint | Cost |
+| Source | Key needed | Used for |
 | --- | --- | --- |
-| `POST /api/business-search` | `mixed_people/api_search` | 0 credits |
-| `POST /api/people-search` | `mixed_people/api_search` | 0 credits |
-| `POST /api/enrich` (the **Reveal** button) | `people/match` | ~1 credit when an email is found |
-| `GET /api/status` | `auth/health` | 0 credits |
+| [Nominatim](https://nominatim.org) + [Overpass](https://overpass-api.de) (OpenStreetMap) | none | business search |
+| The business's own website (home, /contact, /about) | none | emails, phones, socials |
+| [Hunter.io](https://hunter.io) | `HUNTER_API_KEY` (optional, free plan = 50 credits/mo) | named employees + email finder |
 
-Search results come back with obfuscated last names and only *whether* an
-email/phone exists. Clicking **Reveal** on a row enriches that one person.
+The public Overpass servers are often overloaded, so searches query Nominatim and
+Overpass in parallel and merge the results; if Overpass is slow the search still
+returns Nominatim's results (flagged as possibly incomplete).
 
-The old `mixed_people/search` endpoint is paid-plan only — on a free Apollo
-account it returns `403 API_INACCESSIBLE`, which is why v0.1 never worked.
-Free-plan access to `api_search` also requires an Apollo account registered
-with a work email.
+OpenStreetMap coverage is uneven: chains and established businesses are usually
+there, while many tiny businesses aren't.
 
-Apollo can't search by phone number or home address; that would need a
-separate people-data provider (Endato, IDI, Whitepages Pro, …) with its own
-permissible-use terms.
+## Public API
 
-Set `APOLLO_API_KEY` under Vercel → Project → Settings → Environment Variables.
+No auth, CORS enabled. Every endpoint accepts GET (query string) or POST (JSON body).
+`GET /api` returns this list as JSON.
 
-## Deploying (GitHub → Vercel, browser only)
+```
+GET /api/business-search?category=dentist&location=Sugar%20Land,%20TX[&name=...]
+GET /api/site-contacts?website=flossdentalsugarland.com
+GET /api/email-finder?firstName=Dana&lastName=Whitfield&domain=acme.com   (needs HUNTER_API_KEY)
+GET /api/status
+```
 
-1. Create a new repo on GitHub, upload this whole folder via the web UI
-   (drag-and-drop is fine — no CLI needed).
-2. In Vercel, "Add New Project" → import that repo. Vercel auto-detects Next.js,
-   no config needed.
-3. Add `APOLLO_API_KEY` under Vercel → Project → Settings → Environment Variables.
+Nominatim's usage policy allows about 1 request/second, so heavy automated use
+of `/api/business-search` should be throttled on your side.
 
-## Local persistence
+## Optional: Hunter.io
 
-None yet, by design — this build is UI + live API calls only. If you want to save
-searches later, the simplest no-Supabase option is browser `localStorage` (just
-recent searches, client-side only, no server needed).
+1. Sign up free at hunter.io and copy your API key.
+2. Vercel → Project → Settings → Environment Variables → add `HUNTER_API_KEY`.
+3. Redeploy. The top bar shows "hunter.io" in green once it's picked up.
+
+## Deploying
+
+Pushes to `main` deploy automatically on Vercel. No env vars are required.

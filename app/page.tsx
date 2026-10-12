@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import BusinessSearchPanel from '@/components/BusinessSearchPanel';
 import PeopleSearchPanel from '@/components/PeopleSearchPanel';
 
-type Status = { connected: boolean; reason?: string | null } | null;
+type Status = { osm: boolean; hunter: boolean } | null;
 
 export default function Page() {
   const [tab, setTab] = useState<'business' | 'people'>('business');
@@ -14,7 +14,7 @@ export default function Page() {
     fetch('/api/status')
       .then((r) => r.json())
       .then(setStatus)
-      .catch(() => setStatus({ connected: false, reason: 'status check failed' }));
+      .catch(() => setStatus({ osm: true, hunter: false }));
   }, []);
 
   return (
@@ -22,15 +22,15 @@ export default function Page() {
       <div className="topbar">
         <div className="logo-box">PD</div>
         <span className="brand">Prospect Dash</span>
-        <span className="brand-sub">v0.2</span>
+        <span className="brand-sub">v0.3</span>
         <div className="topbar-right">
           <span className="status-pill">
-            <span className={`dot ${status === null ? 'pending' : status.connected ? '' : 'offline'}`} />
-            {status === null
-              ? 'checking apollo…'
-              : status.connected
-                ? 'apollo connected'
-                : status.reason || 'apollo not connected'}
+            <span className="dot" />
+            openstreetmap
+          </span>
+          <span className="status-pill">
+            <span className={`dot ${status === null ? 'pending' : status.hunter ? '' : 'offline'}`} />
+            {status?.hunter ? 'hunter.io' : 'hunter.io (no key)'}
           </span>
         </div>
       </div>
@@ -47,16 +47,16 @@ export default function Page() {
             className={`tab-btn ${tab === 'people' ? 'active' : ''}`}
             onClick={() => setTab('people')}
           >
-            People Search
+            Company Contacts
           </button>
         </div>
 
-        {tab === 'business' ? <BusinessSearchPanel /> : <PeopleSearchPanel />}
+        {tab === 'business' ? <BusinessSearchPanel /> : <PeopleSearchPanel hunter={status ? status.hunter : null} />}
       </main>
 
       <footer className="app-footer">
         <span>prospect-dash · personal use</span>
-        <span>live data via Apollo People API Search</span>
+        <span>data: OpenStreetMap · company websites · Hunter.io (optional)</span>
       </footer>
     </div>
   );

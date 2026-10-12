@@ -1,42 +1,56 @@
-/** A search hit. Contact details are hidden until the lead is revealed. */
-export type BusinessLead = {
+export type Business = {
   id: string;
   name: string;
-  title: string;
-  company: string;
-  hasEmail: boolean;
-  hasPhone: boolean;
-};
-
-/** Full record from Apollo people enrichment (costs credits). */
-export type RevealedLead = {
-  id: string;
-  name: string;
-  title: string;
-  company: string;
-  email: string | null;
-  emailStatus: string | null;
+  category: string;
+  address: string;
   phone: string | null;
-  location: string;
-  linkedinUrl: string | null;
-};
-
-export type SearchResult<T> = {
-  results: T[];
-  total: number;
-  page: number;
-  perPage: number;
+  email: string | null;
+  website: string | null;
+  osmUrl: string;
 };
 
 export type BusinessSearchParams = {
+  category?: string;
   name?: string;
-  company?: string;
-  title?: string;
   location?: string;
 };
 
-export type PeopleSearchParams = {
-  name?: string;
-  keywords?: string;
-  city?: string;
+export type BusinessSearchResult = {
+  results: Business[];
+  location: string;
+  truncated: boolean;
+  /** true when one of the two OSM sources failed, so results may be incomplete */
+  partial: boolean;
+};
+
+export type HunterPerson = {
+  name: string;
+  email: string;
+  position: string | null;
+  confidence: number | null;
+  linkedin: string | null;
+};
+
+export type SiteContacts = {
+  domain: string;
+  emails: string[];
+  phones: string[];
+  socials: string[];
+  pagesScanned: string[];
+  people: HunterPerson[];
+  hunter: 'used' | 'not-configured' | 'error';
+  hunterError?: string;
+};
+
+export type EmailFinderParams = {
+  firstName?: string;
+  lastName?: string;
+  domain?: string;
+};
+
+export type EmailFinderResult = {
+  email: string | null;
+  score: number | null;
+  position: string | null;
+  sources: number;
 };
